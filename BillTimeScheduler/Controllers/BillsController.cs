@@ -15,29 +15,33 @@ namespace BillTimeScheduler.Controllers
     public class BillsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
+
+        // update the account information based on paycheck and bills due today
         public void UpdateDatabase()
         {
             List<decimal> BillsToday = new List<decimal>();
+
             //Update bill dates and populate BillsToday
             foreach (var bill in db.Bills)
             {
                 bill.DueDate = VerifyMonth(bill.Day);
-                if(bill.DueDate.Date == DateTime.Now.Date)
+                if (bill.DueDate.Date == DateTime.Now.Date)
                 {
                     BillsToday.Add(bill.Amount);
                 }
             }
-            //Update current balance
-            foreach(var income in db.PayCheck)
+
+            // Update current balance
+            foreach (var income in db.PayCheck)
             {
-                //Add income if needed and update PayDate
+                // Add income if needed and update PayDate
                 if (income.PayDate.Date == DateTime.Now.Date)
                 {
                     income.Balance += income.Amount;
                     income.PayDate = income.PayDate.AddDays(income.Frequency);
                 }
 
-                //Subtract BillsToday from Current Balance
+                // Subtract BillsToday from Current Balance
                 foreach (var bill in BillsToday)
                 {
                     income.Balance -= bill;
@@ -45,7 +49,8 @@ namespace BillTimeScheduler.Controllers
             }
         }
 
-        public DateTime VerifyMonth (int day)
+        // Updates the month based on what day it is
+        public DateTime VerifyMonth(int day)
         {
             if (day < DateTime.Now.Day)
             {
@@ -56,6 +61,7 @@ namespace BillTimeScheduler.Controllers
                 return new DateTime(DateTime.Now.Year, DateTime.Now.Month, day);
             }
         }
+
         // GET: Bills
         public ActionResult Index()
         {
@@ -90,13 +96,13 @@ namespace BillTimeScheduler.Controllers
         public ActionResult SetIncome([Bind(Include = "Id,Balance,Amount,PayDate,Frequency,ApplicationUserId")] Income PayCheck)
         {
             string UserId = User.Identity.GetUserId();
-            var CurrentUser = db.Users.Find(UserId);            
+            var CurrentUser = db.Users.Find(UserId);
             PayCheck.ApplicationUserId = UserId;
 
             if (ModelState.IsValid)
             {
                 CurrentUser.PayCheck = PayCheck;
-                db.Entry(CurrentUser).State = EntityState.Modified;                    
+                db.Entry(CurrentUser).State = EntityState.Modified;
                 db.SaveChanges();
                 // Modify date if necessary
                 UpdateDatabase();
@@ -189,8 +195,6 @@ namespace BillTimeScheduler.Controllers
         public ActionResult DeleteConfirmed(int id, string List)
         {
             Bill bill = db.Bills.Find(id);
-            //var CurrentUser = db.Users.Find(User.Identity.GetUserId());
-            //CurrentUser.Bills.
             db.Bills.Remove(bill);
             db.SaveChanges();
             return RedirectToAction(List);
