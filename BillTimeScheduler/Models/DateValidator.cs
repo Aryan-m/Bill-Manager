@@ -11,7 +11,7 @@ namespace BillTimeScheduler.Models
         public override bool IsValid(object value)// Return a boolean value: true == IsValid, false != IsValid
         {
             DateTime date = Convert.ToDateTime(value);
-            return date >= DateTime.Now.Date; //Dates Greater than or equal to today are valid (true)
+            return date >= DateTime.Now.Date; // Dates Greater than or equal to today are valid (true)
         }
     }
 }
